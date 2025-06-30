@@ -1,0 +1,390 @@
+@page
+@model DashboardModel
+@{
+    ViewData["Title"] = "gut. - Dashboard";
+}
+
+<div class="dashboard">
+    <header>
+        <h1>weekly dashboard</h1>
+        <nav>
+            <a href="/MyHabits">my habits</a>
+            <a href="/FindFriends">find friends</a>
+            <a href="/Notifications">notifications</a>
+            <a href="/Logout">log out</a>
+        </nav>
+    </header>
+    
+    @if (Model.CurrentUser != null)
+    {
+        <div class="user-info">
+            <h2>Welcome, @Model.CurrentUser.Username!</h2>
+        </div>
+        
+        @if (Model.Habits.Any())
+        {
+            <div class="habits-section">
+                <h3>Your Habits (@Model.Habits.Count)</h3>
+                <div class="habits-grid">
+                    @foreach (var habit in Model.Habits)
+                    {
+                        var completedCount = habit.Completions.Count(c => c.Completed);
+                        var isCompletedToday = Model.IsCompletedToday(habit.Id);
+                        
+                        <div class="habit-card @(isCompletedToday ? "completed-today" : "")">
+                            <h4>@habit.Name</h4>
+                            <div class="completion-stats">
+                                <span>Completed: @completedCount times</span>
+                                <span class="today-status @(isCompletedToday ? "completed" : "")">
+                                    Today: @(isCompletedToday ? "✓" : "○")
+                                </span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="no-habits">
+                <h3>No habits yet</h3>
+                <p>Start building your habits to see your progress here.</p>
+                <a href="/MyHabits" class="btn btn-primary">Create Your First Habit</a>
+            </div>
+        }
+    }
+    
+    <div class="weekly-view">
+        <h3>This Week's Progress</h3>
+        <p class="progress-description">Each dot represents one habit completed that day</p>
+        <table class="week-grid">
+            <thead>
+                <tr>
+                    <th>mo</th>
+                    <th>tu</th>
+                    <th>we</th>
+                    <th>th</th>
+                    <th>fr</th>
+                    <th>sa</th>
+                    <th>su</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    var startOfWeek = Model.CurrentDate.AddDays(-(int)Model.CurrentDate.DayOfWeek + 1);
+                }
+                @for (int i = 0; i < 3; i++)
+                {
+                    <tr>
+                        @for (int j = 0; j < 7; j++)
+                        {
+                            var date = startOfWeek.AddDays(i * 7 + j);
+                            var completedHabitsCount = Model.Habits.Count(h => 
+                                h.Completions.Any(c => c.Date.Date == date.Date && c.Completed));
+                            var isToday = date.Date == DateTime.Today;
+                            
+                            <td class="@(isToday ? "today" : "") @(completedHabitsCount > 0 ? "has-completions" : "")">
+                                @if (completedHabitsCount > 0)
+                                {
+                                    <span class="completion-dots">
+                                        @for (int k = 0; k < Math.Min(completedHabitsCount, 5); k++)
+                                        {
+                                            <span class="dot">●</span>
+                                        }
+                                        @if (completedHabitsCount > 5)
+                                        {
+                                            <span class="more-dots">+@(completedHabitsCount - 5)</span>
+                                        }
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="empty-day">○</span>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="monthly-view">
+        <h2>@Model.CurrentDate.ToString("MMMM yyyy")</h2>
+        <table class="month-grid">
+            <thead>
+                <tr>
+                    <th>mon</th>
+                    <th>tue</th>
+                    <th>wed</th>
+                    <th>thu</th>
+                    <th>fri</th>
+                    <th>sat</th>
+                    <th>sun</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    var firstDayOfMonth = new DateTime(Model.CurrentDate.Year, Model.CurrentDate.Month, 1);
+                    var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+                    var startDate = firstDayOfMonth.AddDays(-(int)firstDayOfMonth.DayOfWeek + 1);
+                    var endDate = startDate.AddDays(41); // 6 weeks * 7 days
+                }
+                
+                @for (int week = 0; week < 6; week++)
+                {
+                    <tr>
+                        @for (int day = 0; day < 7; day++)
+                        {
+                            var currentDate = startDate.AddDays(week * 7 + day);
+                            var isCurrentMonth = currentDate.Month == Model.CurrentDate.Month;
+                            var isToday = currentDate.Date == DateTime.Today;
+                            var hasCompletions = Model.Habits.Any(h => 
+                                h.Completions.Any(c => c.Date.Date == currentDate.Date && c.Completed));
+                            
+                            <td class="@(isCurrentMonth ? "current-month" : "other-month") @(isToday ? "today" : "") @(hasCompletions ? "has-completions" : "")">
+                                <span class="day-number">@currentDate.Day</span>
+                                @if (hasCompletions)
+                                {
+                                    <span class="completion-indicator">●</span>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .dashboard {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    h1, h2, h3 {
+        color: #2c3e50;
+    }
+    
+    nav {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    nav a {
+        color: #7f8c8d;
+        text-decoration: none;
+    }
+    
+    nav a:hover {
+        color: #3498db;
+        text-decoration: underline;
+    }
+    
+    .user-info {
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+    }
+    
+    .habits-section {
+        margin-bottom: 3rem;
+    }
+    
+    .habits-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .habit-card {
+        background-color: white;
+        border: 1px solid #ecf0f1;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .habit-card.completed-today {
+        border-color: #27ae60;
+        box-shadow: 0 4px 8px rgba(39, 174, 96, 0.2);
+    }
+    
+    .habit-card h4 {
+        margin: 0 0 0.5rem 0;
+        color: #2c3e50;
+    }
+    
+    .completion-stats {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+    }
+    
+    .today-status {
+        font-weight: 600;
+    }
+    
+    .today-status.completed {
+        color: #27ae60;
+    }
+    
+    .progress-description {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+    
+    .no-habits {
+        text-align: center;
+        padding: 2rem;
+        color: #7f8c8d;
+        margin-bottom: 3rem;
+    }
+    
+    .weekly-view {
+        margin-bottom: 3rem;
+    }
+    
+    .monthly-view {
+        margin-bottom: 3rem;
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+    
+    th, td {
+        text-align: center;
+        padding: 0.75rem;
+        border: 1px solid #ecf0f1;
+    }
+    
+    th {
+        background-color: #f8f9fa;
+        color: #7f8c8d;
+        font-weight: 600;
+    }
+    
+    .week-grid td {
+        text-align: center;
+        padding: 0.5rem;
+        border: 1px solid #ecf0f1;
+        background-color: #f8f9fa;
+        position: relative;
+    }
+    
+    .week-grid td.today {
+        background-color: #e8f4fd;
+        border-color: #3498db;
+    }
+    
+    .week-grid td.has-completions {
+        background-color: #d4edda;
+    }
+    
+    .completion-dots {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+    }
+    
+    .dot {
+        color: #27ae60;
+        font-size: 0.8rem;
+    }
+    
+    .more-dots {
+        color: #27ae60;
+        font-size: 0.7rem;
+        font-weight: bold;
+    }
+    
+    .empty-day {
+        color: #bdc3c7;
+    }
+    
+    .month-grid {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+    
+    .month-grid th,
+    .month-grid td {
+        border: 1px solid #ecf0f1;
+        padding: 0.75rem;
+        text-align: center;
+        position: relative;
+    }
+    
+    .month-grid th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    .month-grid td.current-month {
+        background-color: white;
+    }
+    
+    .month-grid td.other-month {
+        background-color: #f8f9fa;
+        color: #bdc3c7;
+    }
+    
+    .month-grid td.today {
+        background-color: #e8f4fd;
+        border-color: #3498db;
+        font-weight: bold;
+    }
+    
+    .month-grid td.has-completions {
+        background-color: #d4edda;
+    }
+    
+    .day-number {
+        display: block;
+        font-weight: 600;
+    }
+    
+    .completion-indicator {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        color: #27ae60;
+        font-size: 0.8rem;
+    }
+    
+    .btn {
+        display: inline-block;
+        padding: 0.75rem 1.5rem;
+        background-color: #3498db;
+        color: white;
+        text-decoration: none;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: background-color 0.2s;
+    }
+    
+    .btn:hover {
+        background-color: #2980b9;
+    }
+</style>

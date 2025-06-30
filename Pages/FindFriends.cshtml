@@ -1,0 +1,100 @@
+@page
+@model FindFriendsModel
+@{
+    ViewData["Title"] = "Find Friends";
+}
+
+<div class="find-friends-page">
+    <h1>Find Friends</h1>
+    <form method="get" class="search-form">
+        <input type="text" name="query" value="@Model.Query" placeholder="Enter username..." />
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+
+    @if (Model.SearchResults != null)
+    {
+        <h2>Results</h2>
+        @if (Model.SearchResults.Any())
+        {
+            <ul class="user-list">
+                @foreach (var user in Model.SearchResults)
+                {
+                    <li>
+                        <span>@user.Username</span>
+                        @if (!Model.FriendIds.Contains(user.Id) && user.Id != Model.CurrentUserId)
+                        {
+                            @if (Model.PendingRequests.Contains(user.Id))
+                            {
+                                <span class="badge bg-warning">Request Sent</span>
+                            }
+                            else
+                            {
+                                <form method="post" asp-page-handler="AddFriend" style="display:inline;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="FriendUserId" value="@user.Id" />
+                                    <button type="submit" class="btn btn-success btn-sm">Send Request</button>
+                                </form>
+                            }
+                        }
+                        else if (user.Id == Model.CurrentUserId)
+                        {
+                            <span class="badge bg-secondary">You</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">Friend</span>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p>No users found.</p>
+        }
+    }
+
+    <h2>Your Friends</h2>
+    @if (Model.Friends.Any())
+    {
+        <ul class="user-list">
+            @foreach (var friend in Model.Friends)
+            {
+                <li>@friend.Username</li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p>You have no friends yet.</p>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .find-friends-page {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .search-form {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .user-list {
+            list-style: none;
+            padding: 0;
+        }
+        .user-list li {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .btn-sm {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.9rem;
+        }
+    </style>
+} 
