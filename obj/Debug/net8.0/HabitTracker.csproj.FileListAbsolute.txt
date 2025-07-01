@@ -125,3 +125,4 @@
 /Users/anastasiakozlova/Desktop/HabitTracker/obj/Debug/net8.0/HabitTracker.pdb
 /Users/anastasiakozlova/Desktop/HabitTracker/obj/Debug/net8.0/HabitTracker.genruntimeconfig.cache
 /Users/anastasiakozlova/Desktop/HabitTracker/obj/Debug/net8.0/ref/HabitTracker.dll
+/Users/anastasiakozlova/Desktop/HabitTracker/obj/Debug/net8.0/HabitTracker.sourcelink.json
