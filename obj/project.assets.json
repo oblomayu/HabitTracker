@@ -2610,11 +2610,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/anastasiakozlova/Desktop/HabitTracker/HabitTracker.csproj",
+      "projectUniqueName": "/Users/anastasiakozlova/Desktop/projj/HabitTracker/HabitTracker.csproj",
       "projectName": "HabitTracker",
-      "projectPath": "/Users/anastasiakozlova/Desktop/HabitTracker/HabitTracker.csproj",
+      "projectPath": "/Users/anastasiakozlova/Desktop/projj/HabitTracker/HabitTracker.csproj",
       "packagesPath": "/Users/anastasiakozlova/.nuget/packages/",
-      "outputPath": "/Users/anastasiakozlova/Desktop/HabitTracker/obj/",
+      "outputPath": "/Users/anastasiakozlova/Desktop/projj/HabitTracker/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/anastasiakozlova/.nuget/NuGet/NuGet.Config"
